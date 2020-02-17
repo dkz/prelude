@@ -118,11 +118,18 @@
   ;; macro expands to a lambda which accepts specified set of messages.
 
   (define-syntax dispatcher
-    (syntax-rules (=>)
+    (syntax-rules (else =>)
       ((_ "apply" args => fn)
        (apply fn args))
       ((_ "apply" args lambda-args expr ...)
        (apply (lambda lambda-args expr ...) args))
+      ((_ (method def ...) ... (else clause ...))
+       (lambda (msg . args)
+         (case msg
+           (method
+             (dispatcher "apply" args def ...)) ...
+           (else
+             (dispatcher "apply" (cons msg args) clause ...)))))
       ((_ (method def ...) ...)
        (lambda (msg . args)
          (case msg

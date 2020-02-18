@@ -54,22 +54,27 @@
   ;; optional argument to the object.
 
   (define (named-tuple . args)
-    (let* ((backend (make-hashtable symbol-hash eq?)))
+    (let ((backend (make-hashtable symbol-hash eq?)))
       (map (lambda (def)
              (hashtable-set! backend (car def) (cdr def)))
            (conses args))
       (case-lambda
-        ((name)
+        ((key)
          (let* ((f (gensym))
-                (v (hashtable-ref backend name f)))
-           (if (eq? f v)
+                (v (hashtable-ref backend key f)))
+           (when (eq? f v)
              (assertion-violation 'named-tuple
-                                  "name is not defined in tuple"
+                                  "key is not defined"
                                   (hashtable-keys backend)
-                                  name)
-             v)))
-        ((name value)
-         (hashtable-set! backend name value)))))
+                                  key))
+           v))
+        ((key value)
+         (if (hashtable-contains? backend key)
+           (hashtable-set! backend key value)
+           (assertion-violation 'named-tuple
+                                "key is not defined"
+                                (hashtable-keys backend)
+                                key))))))
 
   ;; ASSOC-LET
   ;;

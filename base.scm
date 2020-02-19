@@ -103,11 +103,11 @@
     (syntax-rules (quote)
       ((_ (() assoclist) expr ...)
        (begin expr ...))
-      ((_ ((((quote name) default) rest ...) assoclist) expr ...)
+      ((_ (((name default) rest ...) assoclist) expr ...)
        (let ((src assoclist))
          (assoc-let (((name (quote name) or default)) src)
            (assoc-bind ((rest ...) src) expr ...))))
-      ((_ (((quote name) rest ...) assoclist) expr ...)
+      ((_ ((name rest ...) assoclist) expr ...)
        (let ((src assoclist))
          (assoc-let (((name (quote name))) src)
            (assoc-bind ((rest ...) src) expr ...))))))
@@ -123,11 +123,11 @@
        (lambda (formals ... . opts)
          (let ([e (conses opts)])
            (assoc-lambda "named-args" e (named ...) expr ...))))
-      ((_ "named-args" src ((quote name) rest ...) expr ...)
-       (assoc-bind [((quote name)) src]
+      ((_ "named-args" src (name rest ...) expr ...)
+       (assoc-bind [(name) src]
          (assoc-lambda "named-args" src (rest ...) expr ...)))
-      ((_ "named-args" src (((quote name) default) rest ...) expr ...)
-       (assoc-bind [(((quote name) default)) src]
+      ((_ "named-args" src ((name default) rest ...) expr ...)
+       (assoc-bind [((name default)) src]
          (assoc-lambda "named-args" src (rest ...) expr ...)))
       ((_ "named-args" src () expr ...)
        (begin expr ...))))

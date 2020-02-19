@@ -21,6 +21,7 @@
     named-tuple
     assoc-let
     assoc-bind
+    assoc-lambda
     dispatcher
     match-case
     match-lambda)
@@ -99,17 +100,37 @@
   ;; with symbols that represent quoted names.
 
   (define-syntax assoc-bind
-    (syntax-rules ()
+    (syntax-rules (quote)
       ((_ (() assoclist) expr ...)
        (begin expr ...))
-      ((_ (((name default) rest ...) assoclist) expr ...)
+      ((_ ((((quote name) default) rest ...) assoclist) expr ...)
        (let ((src assoclist))
          (assoc-let (((name (quote name) or default)) src)
            (assoc-bind ((rest ...) src) expr ...))))
-      ((_ ((name rest ...) assoclist) expr ...)
+      ((_ (((quote name) rest ...) assoclist) expr ...)
        (let ((src assoclist))
          (assoc-let (((name (quote name))) src)
            (assoc-bind ((rest ...) src) expr ...))))))
+
+  ;; ASSOC-LAMBDA
+  ;;
+  ;; Allows to define in-place lambda function with optional named arguments.
+  ;; Expands into lambda with an assoc-bind.
+
+  (define-syntax assoc-lambda
+    (syntax-rules (quote)
+      ((_ ((formals ...) named ...) expr ...)
+       (lambda (formals ... . opts)
+         (let ([e (conses opts)])
+           (assoc-lambda "named-args" e (named ...) expr ...))))
+      ((_ "named-args" src ((quote name) rest ...) expr ...)
+       (assoc-bind [((quote name)) src]
+         (assoc-lambda "named-args" src (rest ...) expr ...)))
+      ((_ "named-args" src (((quote name) default) rest ...) expr ...)
+       (assoc-bind [(((quote name) default)) src]
+         (assoc-lambda "named-args" src (rest ...) expr ...)))
+      ((_ "named-args" src () expr ...)
+       (begin expr ...))))
 
   ;; DISPATCHER
   ;;
